@@ -1,0 +1,23 @@
+{
+    "name": "dnadesign/silverstripe-tagurit",
+    "description": "An alternative taxonomy module, providing protected types, and inverting the Tag/Type relationship to Type/Tag",
+    "type": "silverstripe-vendormodule",
+    "keywords": [
+        "silverstripe",
+        "taxonomy",
+        "tag"
+    ],
+    "license": "MIT",
+    "require": {
+        "silverstripe/framework": "^4.0",
+        "silverstripe/vendor-plugin": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DNADesign\\Tagurit\\": "src/"
+        }
+    },
+    "extra": {
+        "installer-name": "silverstripe-tagurit"
+    }
+}
