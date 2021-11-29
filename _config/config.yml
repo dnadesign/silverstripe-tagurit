@@ -1,0 +1,6 @@
+# Remap taxonomy module tables as we want to use this table, and the
+# silverstrpe taxonomy module is required by dependency chains in some recipes
+SilverStripe\Taxonomy\TaxonomyTerm:
+  table_name: _obsolete_TaxonomyTerm
+SilverStripe\Taxonomy\TaxonomyType:
+  table_name: _obsolete_TaxonomyType
