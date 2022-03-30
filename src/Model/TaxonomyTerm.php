@@ -95,14 +95,15 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
 
     public function canEdit($member = null)
     {
-        if ($this->Protected > 0) {
-            return false;
-        }
-
         $extended = $this->extendedCan(__FUNCTION__, $member);
         if ($extended !== null) {
             return $extended;
         }
+
+        if ($this->Protected > 0) {
+            return false;
+        }
+
         return Permission::check('TAXONOMYTERM_EDIT');
     }
 
