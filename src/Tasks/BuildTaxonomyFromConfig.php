@@ -25,10 +25,12 @@ class BuildTaxonomyFromConfig extends BuildTask
 
     public function run($request)
     {
-        $terms = Config::inst()->get('tagurit_protected_taxonomy');
+        $input = Config::inst()->get('tagurit_protected_taxonomy');
 
-        if ($terms && count($terms) > 0) {
-            foreach ($terms as $typename => $terms) {
+        if ($input && count($input) > 0) {
+            $protectedTypeIds = [];
+
+            foreach ($input as $typename => $terms) {
                 $type = TaxonomyType::get()->find('Name', $typename);
 
                 if (!$type) {
@@ -42,12 +44,19 @@ class BuildTaxonomyFromConfig extends BuildTask
                 $type->Protected = true;
                 $type->write();
 
-                if (!$terms) {
-                    continue;
-                }
+                $protectedTypeIds[] = $type->ID;
+            }
+
+            foreach ($input as $typename => $terms) {
+                $type = TaxonomyType::get()->find('Name', $typename);
 
                 $names = $type->Terms()->column('Name');
                 $names = array_combine($names, $names);
+
+
+                if (!$terms) {
+                    continue;
+                }
 
                 foreach ($terms as $term) {
                     if (is_array($term)) {
@@ -62,12 +71,40 @@ class BuildTaxonomyFromConfig extends BuildTask
                         unset($names[$term]);
                     }
 
-                    $termObj = TaxonomyTerm::get()->find('Name', $term);
+                    $termObj = TaxonomyTerm::get()->filter([
+                        'Name' => $term,
+                        'TypeID' => $type->ID
+                    ])->first();
 
                     if (!$termObj) {
-                        echo sprintf('  + creating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
-                        $termObj = TaxonomyTerm::create();
-                        $termObj->Name = $term;
+                        $termObjs =  TaxonomyTerm::get()->filter([
+                            'Name' => $term
+                        ]);
+
+                        if (!$termObjs->exists()) {
+                            echo sprintf('  + creating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
+                            $termObj = TaxonomyTerm::create();
+                            $termObj->Name = $term;
+                        } else {
+                            // one or more matches by main, check to make sure we don't have a duplicate
+                            // tag
+                            $termObj = null;
+
+                            foreach ($termObjs as $candidate) {
+                                if (in_array($candidate->TypeID, $protectedTypeIds)) {
+                                    continue;
+                                } else {
+                                    $termObj = $candidate;
+                                }
+                            }
+
+                            if (!$termObj) {
+                                $termObj = TaxonomyTerm::create();
+                                $termObj->Name = $term;
+                            } else {
+                                echo sprintf('  - updating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
+                            }
+                        }
                     } else {
                         echo sprintf('  - updating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
                     }
