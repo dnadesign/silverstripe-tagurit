@@ -17,4 +17,6 @@ class TaxonomyAdmin extends ModelAdmin
     private static $managed_models = [TaxonomyType::class];
 
     private static $menu_icon_class = 'font-icon-tags';
+    
+    private static $url_priority = 51;
 }
