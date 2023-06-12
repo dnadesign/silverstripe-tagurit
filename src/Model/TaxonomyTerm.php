@@ -3,10 +3,10 @@
 namespace DNADesign\Tagurit\Model;
 
 use SilverStripe\ORM\DataObject;
-use SilverStripe\Security\Permission;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
+use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
 /**
@@ -100,10 +100,6 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
             return $extended;
         }
 
-        if ($this->Protected > 0) {
-            return false;
-        }
-
         return Permission::check('TAXONOMYTERM_EDIT');
     }
 
@@ -117,6 +113,7 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
         if ($extended !== null) {
             return $extended;
         }
+
         return Permission::check('TAXONOMYTERM_DELETE');
     }
 
@@ -126,6 +123,7 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
         if ($extended !== null) {
             return $extended;
         }
+        
         return Permission::check('TAXONOMYTERM_CREATE');
     }
 
