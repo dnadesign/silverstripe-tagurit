@@ -12,8 +12,8 @@ trait TaxonomyTrait
     /**
      * Helper to find a taxonomy type either by ID or name
      *
-     * @param int|String $type
-     * @return TaxonomyType
+     * @param int|string $type
+     * @return ?TaxonomyType
      */
     public static function findTaxonomyType($type)
     {
@@ -27,8 +27,8 @@ trait TaxonomyTrait
     /**
      * Return taxonomy terms for a type specified as a string
      *
-     * @param string $type
-     * @return DataList
+     * @param int|string $type
+     * @return ArrayList<TaxonomyTerm>|DataList<TaxonomyTerm>
      */
     public static function getTermsForType($type)
     {

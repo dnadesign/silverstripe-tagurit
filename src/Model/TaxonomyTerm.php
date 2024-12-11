@@ -13,8 +13,10 @@ use SilverStripe\Security\PermissionProvider;
  * Represents a single taxonomy term. Can be re-ordered in the CMS, and the default sorting is to use the order as
  * specified in the CMS.
  *
- * @property string $Name
+ * @property ?string $Name
  * @property int $Sort
+ * @property bool $Protected
+ * @method TaxonomyType Type()
  * @property int $TypeID
  */
 class TaxonomyTerm extends DataObject implements PermissionProvider
