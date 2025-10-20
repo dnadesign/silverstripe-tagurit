@@ -4,12 +4,12 @@ namespace DNADesign\Tagurit\Model;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\ORM\FieldType\DBField;
 use DNADesign\Tagurit\Model\TaxonomyTerm;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
@@ -91,7 +91,7 @@ class TaxonomyType extends DataObject implements PermissionProvider
         return DBField::create_field(DBHTMLText::class, $label);
     }
 
-    public function validate()
+    public function validate(): ValidationResult
     {
         $result = ValidationResult::create();
         

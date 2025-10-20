@@ -2,10 +2,13 @@
 
 namespace DNADesign\Tagurit\Tasks;
 
-use DNADesign\Tagurit\Model\TaxonomyTerm;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\Queries\SQLUpdate;
+use DNADesign\Tagurit\Model\TaxonomyTerm;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * BuildTask to create the set of protected Types and Terms from config. 
@@ -13,15 +16,15 @@ use SilverStripe\ORM\Queries\SQLUpdate;
  */
 class UnprotectTaxonomyTerms extends BuildTask
 {
-    protected $title = '[Taxonomy] Un-protect Taxonomy Terms';
+    protected string $title = '[Taxonomy] Un-protect Taxonomy Terms';
 
-    protected $description = "Set every Taxonomy Term as un-protected";
+    protected static string $description = "Set every Taxonomy Term as un-protected";
 
     private static $segment = "unprotect-taxonomy-terms";
 
     protected $enabled = true;
 
-    public function run($request)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $table = DataObject::getSchema()->tableForField(TaxonomyTerm::class, 'Protected');
         if (!$table) {
@@ -32,5 +35,7 @@ class UnprotectTaxonomyTerms extends BuildTask
         $query->execute();
 
         echo 'Done.';
+        
+        return Command::SUCCESS;
     }
 }

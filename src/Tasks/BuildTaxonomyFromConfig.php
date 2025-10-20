@@ -3,11 +3,14 @@
 namespace DNADesign\Tagurit\Tasks;
 
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use DNADesign\Tagurit\Model\TaxonomyTerm;
 use DNADesign\Tagurit\Model\TaxonomyType;
-use SilverStripe\Control\Director;
-use SilverStripe\ORM\ValidationException;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\Core\Validation\ValidationException;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * BuildTask to create the set of protected Types and Terms from config.
@@ -15,15 +18,15 @@ use SilverStripe\ORM\ValidationException;
  */
 class BuildTaxonomyFromConfig extends BuildTask
 {
-    protected $title = '[Taxonomy] Build configured Taxonomy';
+    protected string $title = '[Taxonomy] Build configured Taxonomy';
 
-    protected $description = "Used to create proteted taxonomy Types and Terms from config";
+    protected static string $description = "Used to create proteted taxonomy Types and Terms from config";
 
     private static $segment = "build-taxonomy";
 
     protected $enabled = true;
 
-    public function run($request)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $input = Config::inst()->get('tagurit_protected_taxonomy');
 
@@ -139,6 +142,8 @@ class BuildTaxonomyFromConfig extends BuildTask
         } else {
             echo 'No protected Types defined' . $this->eol();
         }
+
+        return Command::SUCCESS;
     }
 
     public function eol()

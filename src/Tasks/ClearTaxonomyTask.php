@@ -5,6 +5,9 @@ namespace DNADesign\Tagurit\Tasks;
 use SilverStripe\ORM\DB;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\Control\Director;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * BuildTask to create the set of protected Types and Terms from config. 
@@ -12,15 +15,15 @@ use SilverStripe\Control\Director;
  */
 class ClearTaxonomyTask extends BuildTask
 {
-    protected $title = '[Taxonomy] Clear the Taxonomy';
+    protected string $title = '[Taxonomy] Clear the Taxonomy';
 
-    protected $description = "Used to truncate the TaxonomyType and TaxonomyTerm tables.";
+    protected static string $description = "Used to truncate the TaxonomyType and TaxonomyTerm tables.";
 
     private static $segment = "clear-taxonomy";
 
     protected $enabled = true;
 
-    public function run($request)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         // Prevent the user from accidentally clearing the taxonomy Prod
         if (Director::isLive()) {
@@ -40,5 +43,7 @@ class ClearTaxonomyTask extends BuildTask
         DB::query('TRUNCATE TaxonomyTerm');
 
         echo '<p>Deleted all records from the TaxonomyType and TaxonomyTerm tables.</p>';
+
+        return Command::SUCCESS;
     }
 }

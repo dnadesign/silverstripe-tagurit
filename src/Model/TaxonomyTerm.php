@@ -3,11 +3,11 @@
 namespace DNADesign\Tagurit\Model;
 
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Permission;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\ValidationResult;
-use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Core\Validation\ValidationResult;
 
 /**
  * Represents a single taxonomy term. Can be re-ordered in the CMS, and the default sorting is to use the order as
@@ -70,7 +70,7 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
         return DBField::create_field(DBHTMLText::class, $label);
     }
 
-    public function validate()
+    public function validate(): ValidationResult
     {
         $result = ValidationResult::create();
         
