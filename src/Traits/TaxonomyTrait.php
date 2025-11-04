@@ -3,7 +3,7 @@
 namespace DNADesign\Tagurit\Traits;
 
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use DNADesign\Tagurit\Model\TaxonomyTerm;
 use DNADesign\Tagurit\Model\TaxonomyType;
 
