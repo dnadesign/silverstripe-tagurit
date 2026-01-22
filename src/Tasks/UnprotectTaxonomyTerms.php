@@ -20,21 +20,21 @@ class UnprotectTaxonomyTerms extends BuildTask
 
     protected static string $description = "Set every Taxonomy Term as un-protected";
 
-    private static $segment = "unprotect-taxonomy-terms";
-
-    protected $enabled = true;
+    protected static string $commandName = "unprotect-taxonomy-terms";
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $table = DataObject::getSchema()->tableForField(TaxonomyTerm::class, 'Protected');
         if (!$table) {
-            exit('Could not locate DB table to update!');
+            $output->writeln('Could not locate DB table to update!');
+
+            return Command::FAILURE;
         }
 
         $query = SQLUpdate::create($table, ['Protected' => false]);
         $query->execute();
 
-        echo 'Done.';
+        $output->writeln('Done.');
         
         return Command::SUCCESS;
     }

@@ -3,7 +3,6 @@
 namespace DNADesign\Tagurit\Tasks;
 
 use SilverStripe\Dev\BuildTask;
-use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use DNADesign\Tagurit\Model\TaxonomyTerm;
 use DNADesign\Tagurit\Model\TaxonomyType;
@@ -22,26 +21,24 @@ class BuildTaxonomyFromConfig extends BuildTask
 
     protected static string $description = "Used to create proteted taxonomy Types and Terms from config";
 
-    private static $segment = "build-taxonomy";
-
-    protected $enabled = true;
+    protected static string $commandName = "build-taxonomy";
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $input = Config::inst()->get('tagurit_protected_taxonomy');
+        $protectedTaxonomy = Config::inst()->get('tagurit_protected_taxonomy');
 
-        if ($input && count($input) > 0) {
+        if ($protectedTaxonomy && count($protectedTaxonomy) > 0) {
             $protectedTypeIds = [];
 
-            foreach ($input as $typename => $terms) {
+            foreach ($protectedTaxonomy as $typename => $terms) {
                 $type = TaxonomyType::get()->find('Name', $typename);
 
                 if (!$type) {
-                    echo sprintf('Creating taxonomy Type "%s"... ', $typename) . $this->eol();
+                    $output->writeln(sprintf('Creating taxonomy Type "%s"... ', $typename));
                     $type = TaxonomyType::create();
                     $type->Name = $typename;
                 } else {
-                    echo sprintf('Updating taxonomy Type "%s"... ', $typename) . $this->eol();
+                    $output->writeln(sprintf('Updating taxonomy Type "%s"... ', $typename));
                 }
 
                 $type->Protected = true;
@@ -50,7 +47,7 @@ class BuildTaxonomyFromConfig extends BuildTask
                 $protectedTypeIds[] = $type->ID;
             }
 
-            foreach ($input as $typename => $terms) {
+            foreach ($protectedTaxonomy as $typename => $terms) {
                 $type = TaxonomyType::get()->find('Name', $typename);
 
                 $names = $type->Terms()->column('Name');
@@ -85,7 +82,7 @@ class BuildTaxonomyFromConfig extends BuildTask
                         ]);
 
                         if (!$termObjs->exists()) {
-                            echo sprintf('  + creating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
+                            $output->writeln(sprintf('  + creating Term "%s" in Type "%s"... ', $term, $type->Name));
                             $termObj = TaxonomyTerm::create();
                             $termObj->Name = $term;
                         } else {
@@ -105,11 +102,11 @@ class BuildTaxonomyFromConfig extends BuildTask
                                 $termObj = TaxonomyTerm::create();
                                 $termObj->Name = $term;
                             } else {
-                                echo sprintf('  - updating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
+                                $output->writeln(sprintf('  - updating Term "%s" in Type "%s"... ', $term, $type->Name));
                             }
                         }
                     } else {
-                        echo sprintf('  - updating Term "%s" in Type "%s"... ', $term, $type->Name) . $this->eol();
+                        $output->writeln(sprintf('  - updating Term "%s" in Type "%s"... ', $term, $type->Name));
                     }
 
                     $termObj->TypeID = $type->ID;
@@ -118,7 +115,7 @@ class BuildTaxonomyFromConfig extends BuildTask
                     try {
                         $termObj->write();
                     } catch (ValidationException $e) {
-                        echo $e->getMessage() . $this->eol();
+                        $output->writeln($e->getMessage());
                     }
                 }
 
@@ -132,26 +129,17 @@ class BuildTaxonomyFromConfig extends BuildTask
                         try {
                             $tag->write();
                         } catch (ValidationException $e) {
-                            echo $e->getMessage() . $this->eol();
+                            $output->writeln($e->getMessage());
                         }
                     }
                 }
 
-                echo $this->eol();
+                $output->writeln('');
             }
         } else {
-            echo 'No protected Types defined' . $this->eol();
+            $output->writeln('No protected Types defined');
         }
 
         return Command::SUCCESS;
-    }
-
-    public function eol()
-    {
-        if (Director::is_cli()) {
-            echo PHP_EOL;
-        } else {
-            echo '<br />';
-        }
     }
 }

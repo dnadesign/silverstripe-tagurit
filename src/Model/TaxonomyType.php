@@ -2,18 +2,14 @@
 
 namespace DNADesign\Tagurit\Model;
 
+use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
 use SilverStripe\ORM\FieldType\DBField;
 use DNADesign\Tagurit\Model\TaxonomyTerm;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Core\Validation\ValidationResult;
-use SilverStripe\Forms\GridField\GridFieldDeleteAction;
-use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
-use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
-use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 
 /**
  * Represents a type of taxonomy, which can be configured in the CMS. 
@@ -25,14 +21,14 @@ class TaxonomyType extends DataObject implements PermissionProvider
     
     private static $table_name = 'TaxonomyType';
 
-    private static $db = array(
+    private static $db = [
         'Name' => 'Varchar(255)',
         'Protected' => 'Boolean'
-    );
+    ];
 
-    private static $has_many = array(
+    private static $has_many = [
         'Terms' => TaxonomyTerm::class
-    );
+    ];
 
     private static $cascade_deletes = [
         'Terms'
@@ -43,41 +39,23 @@ class TaxonomyType extends DataObject implements PermissionProvider
         'getIsProtected' => 'Protection'
     ];
 
-    public function getCMSFields()
-    {
-        $fields = parent::getCMSFields();
-
-        $fields->removeByName([
+    private static array $scaffold_cms_fields_settings = [
+        'ignoreFields' => [
+            'Sort',
+            'Type',
             'Protected',
-            'Terms'
-        ]);
+        ],
+    ];
 
-        if ($this->isInDB()) {
-            $termsGrid = GridFieldConfig_RecordEditor::create();
-
-            $termsGrid->removeComponentsByType([
-                GridFieldAddExistingAutocompleter::class,
-                GridFieldDeleteAction::class
-            ]);
-
-            $fields->addFieldToTab(
-                'Root.Main',
-                GridField::create(
-                    'Terms',
-                    'Terms',
-                    $this->Terms(),
-                    $termsGrid
-                )
-            );
-    
-            $termsGrid->addComponent(GridFieldOrderableRows::create('Sort'));
-        
-            if ($this->Protected > 0) {
-                $fields->dataFieldByName('Name')->setReadonly(true);
+    public function getCMSFields(): FieldList
+    {
+        $this->beforeUpdateCMSFields(function (FieldList $fields): void {
+            if ($this->isInDB() && $this->Protected > 0) {
+                $fields->dataFieldByName('Name')?->setReadonly(true);
             }
-        }
+        });
 
-        return $fields;
+        return parent::getCMSFields();
     }
 
     public function getIsProtected()
@@ -139,7 +117,7 @@ class TaxonomyType extends DataObject implements PermissionProvider
         return Permission::check('TAXONOMYTYPE_DELETE');
     }
 
-    public function canCreate($member = null, $context = array())
+    public function canCreate($member = null, $context = [])
     {
         $extended = $this->extendedCan(__FUNCTION__, $member);
         if ($extended !== null) {
@@ -151,37 +129,37 @@ class TaxonomyType extends DataObject implements PermissionProvider
 
     public function providePermissions()
     {
-        return array(
-            'TAXONOMYTYPE_EDIT' => array(
+        return [
+            'TAXONOMYTYPE_EDIT' => [
                 'name' => _t(
-                    __CLASS__ . '.EditPermissionLabel',
+                    self::class . '.EditPermissionLabel',
                     'Edit a taxonomy type'
                 ),
                 'category' => _t(
-                    __CLASS__ . '.Category',
+                    self::class . '.Category',
                     'Taxonomy types'
                 ),
-            ),
-            'TAXONOMYTYPE_DELETE' => array(
+            ],
+            'TAXONOMYTYPE_DELETE' => [
                 'name' => _t(
-                    __CLASS__ . '.DeletePermissionLabel',
+                    self::class . '.DeletePermissionLabel',
                     'Delete a taxonomy type'
                 ),
                 'category' => _t(
-                    __CLASS__ . '.Category',
+                    self::class . '.Category',
                     'Taxonomy types'
                 ),
-            ),
-            'TAXONOMYTYPE_CREATE' => array(
+            ],
+            'TAXONOMYTYPE_CREATE' => [
                 'name' => _t(
-                    __CLASS__ . '.CreatePermissionLabel',
+                    self::class . '.CreatePermissionLabel',
                     'Create a taxonomy type'
                 ),
                 'category' => _t(
-                    __CLASS__ . '.Category',
+                    self::class . '.Category',
                     'Taxonomy types'
                 ),
-            )
-        );
+            ]
+        ];
     }
 }

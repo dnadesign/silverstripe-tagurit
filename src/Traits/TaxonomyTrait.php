@@ -7,6 +7,9 @@ use SilverStripe\Model\List\ArrayList;
 use DNADesign\Tagurit\Model\TaxonomyTerm;
 use DNADesign\Tagurit\Model\TaxonomyType;
 
+/**
+ * @phpstan-ignore-next-line trait.unsed
+ */
 trait TaxonomyTrait
 {
     /**
@@ -38,6 +41,6 @@ trait TaxonomyTrait
             return TaxonomyTerm::get()->filter('TypeID', $type->ID);
         }
 
-        return new ArrayList();
+        return ArrayList::create();
     }
 }

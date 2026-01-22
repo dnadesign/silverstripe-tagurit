@@ -2,12 +2,24 @@
 
 namespace DNADesign\Tagurit\Model;
 
+use DNADesign\Tagurit\Traits\TaxonomyTrait;
+use Override;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
+use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\GridField\GridFieldDeleteAction;
+use SilverStripe\Forms\ListboxField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Core\Validation\ValidationResult;
+use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
+use Symfony\Component\String\Inflector\EnglishInflector;
 
 /**
  * Represents a single taxonomy term. Can be re-ordered in the CMS, and the default sorting is to use the order as
@@ -21,19 +33,21 @@ use SilverStripe\Core\Validation\ValidationResult;
  */
 class TaxonomyTerm extends DataObject implements PermissionProvider
 {
+    use TaxonomyTrait;
+
     private static $singular_name = 'Term';
 
     private static $table_name = 'TaxonomyTerm';
 
-    private static $db = array(
+    private static $db = [
         'Name' => 'Varchar(255)',
         'Sort' => 'Int',
         'Protected' => 'Boolean'
-    );
+    ];
 
-    private static $has_one = array(
+    private static $has_one = [
         'Type' => TaxonomyType::class
-    );
+    ];
 
     private static $summary_fields = [
         'Title' => 'Title',
@@ -42,21 +56,23 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
     
     private static $default_sort = 'Sort';
 
-    public function getCMSFields()
-    {
-        $fields = parent::getCMSFields();
-
-        $fields->removeByName([
-            'Protected',
+    private static array $scaffold_cms_fields_settings = [
+        'ignoreFields' => [
             'Sort',
-            'TypeID'
-        ]);
+            'Type',
+            'Protected',
+        ],
+    ];
 
-        if ($this->isInDB() && $this->Protected > 0) {
-            $fields->dataFieldByName('Name')->setReadonly(true);
-        }
+    public function getCMSFields(): FieldList
+    {
+        $this->beforeUpdateCMSFields(function (FieldList $fields): void {
+            if ($this->isInDB() && $this->Protected > 0) {
+                $fields->dataFieldByName('Name')?->setReadonly(true);
+            }
+        });
 
-        return $fields;
+        return parent::getCMSFields();
     }
 
     public function getIsProtected()
@@ -119,7 +135,7 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
         return Permission::check('TAXONOMYTERM_DELETE');
     }
 
-    public function canCreate($member = null, $context = array())
+    public function canCreate($member = null, $context = [])
     {
         $extended = $this->extendedCan(__FUNCTION__, $member);
         if ($extended !== null) {
@@ -131,37 +147,80 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
 
     public function providePermissions()
     {
-        return array(
-            'TAXONOMYTERM_EDIT' => array(
+        return [
+            'TAXONOMYTERM_EDIT' => [
                 'name' => _t(
-                    __CLASS__ . '.EditPermissionLabel',
+                    self::class . '.EditPermissionLabel',
                     'Edit a taxonomy term'
                 ),
                 'category' => _t(
-                    __CLASS__ . '.Category',
+                    self::class . '.Category',
                     'Taxonomy terms'
                 ),
-            ),
-            'TAXONOMYTERM_DELETE' => array(
+            ],
+            'TAXONOMYTERM_DELETE' => [
                 'name' => _t(
-                    __CLASS__ . '.DeletePermissionLabel',
+                    self::class . '.DeletePermissionLabel',
                     'Delete a taxonomy term and all nested terms'
                 ),
                 'category' => _t(
-                    __CLASS__ . '.Category',
+                    self::class . '.Category',
                     'Taxonomy terms'
                 ),
-            ),
-            'TAXONOMYTERM_CREATE' => array(
+            ],
+            'TAXONOMYTERM_CREATE' => [
                 'name' => _t(
-                    __CLASS__ . '.CreatePermissionLabel',
+                    self::class . '.CreatePermissionLabel',
                     'Create a taxonomy term'
                 ),
                 'category' => _t(
-                    __CLASS__ . '.Category',
+                    self::class . '.Category',
                     'Taxonomy terms'
                 ),
-            )
+            ]
+        ];
+    }
+
+    #[Override]
+    public function scaffoldFormFieldForHasOne(string $fieldName, ?string $fieldTitle, string $relationName, DataObject $ownerRecord): FormField
+    {
+        return DropdownField::create(
+            $relationName,
+            $fieldTitle,
+            $this->getTermsForType($fieldTitle ?? $fieldName)->map()
+        );
+    }
+
+    #[Override]
+    public function scaffoldFormFieldForHasMany(string $relationName, ?string $fieldTitle, DataObject $ownerRecord, bool &$includeInOwnTab): FormField
+    {
+        $includeInOwnTab = true;
+
+        return GridField::create(
+            $relationName,
+            $fieldTitle,
+            $ownerRecord->$relationName(),
+            GridFieldConfig_RecordEditor::create()
+                ->addComponent(GridFieldOrderableRows::create('Sort'))
+                ->removeComponentsByType([
+                    GridFieldDeleteAction::class,
+                    GridFieldAddExistingAutocompleter::class
+                ])
+        );
+    }
+
+    #[Override]
+    public function scaffoldFormFieldForManyMany(string $relationName, ?string $fieldTitle, DataObject $ownerRecord, bool &$includeInOwnTab): FormField
+    {
+        $includeInOwnTab = true;
+
+        // Term names are usually singular forms of the relation name
+        $termName = (new EnglishInflector())->singularize($fieldTitle ?? $relationName)[0];
+
+        return ListboxField::create(
+            $relationName,
+            $fieldTitle,
+            $this->getTermsForType($termName) // @phpstan-ignore argument.type
         );
     }
 }

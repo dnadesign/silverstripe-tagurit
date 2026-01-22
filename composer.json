@@ -9,8 +9,17 @@
     ],
     "license": "MIT",
     "require": {
+        "php": "^8.3",
+        "silverstripe/admin": "^3.0",
         "silverstripe/framework": "^6.0",
         "symbiote/silverstripe-gridfieldextensions": "^5.0"
+    },
+    "require-dev": {
+        "cambis/silverstan": "^2.1",
+        "cambis/silverstripe-rector": "^2.1",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.1",
+        "rector/rector": "^2.3"
     },
     "autoload": {
         "psr-4": {
@@ -19,5 +28,13 @@
     },
     "extra": {
         "installer-name": "silverstripe-tagurit"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "phpstan/extension-installer": true,
+            "silverstripe/vendor-plugin": true
+        },
+        "sort-packages": true
     }
 }
