@@ -1,0 +1,8 @@
+includes:
+  - vendor/cambis/silverstan/bleedingEdge.neon
+parameters:
+  level: 5
+  treatPhpDocTypesAsCertain: false
+  paths:
+    - _config.php
+    - src
