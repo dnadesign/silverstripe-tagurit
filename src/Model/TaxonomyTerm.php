@@ -12,6 +12,7 @@ use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\ListboxField;
+use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Permission;
 use SilverStripe\ORM\FieldType\DBField;
@@ -184,11 +185,17 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
     #[Override]
     public function scaffoldFormFieldForHasOne(string $fieldName, ?string $fieldTitle, string $relationName, DataObject $ownerRecord): FormField
     {
-        return DropdownField::create(
-            $relationName,
-            $fieldTitle,
-            $this->getTermsForType($fieldTitle ?? $fieldName)->map()
-        );
+        $type = $fieldTitle ?? $ownerRecord->fieldLabel($relationName);
+        $terms = $this->getTermsForType($type)->map();
+
+        if ($terms->count() === 0) {
+            return DropdownField::create($fieldName, $type)
+                ->setDescription('No terms available for taxonomy type: ' . $type)
+                ->performDisabledTransformation();
+        }
+
+        return DropdownField::create($fieldName, $type, $terms)
+            ->setEmptyString('Select a ' . $type);
     }
 
     #[Override]
@@ -213,14 +220,22 @@ class TaxonomyTerm extends DataObject implements PermissionProvider
     public function scaffoldFormFieldForManyMany(string $relationName, ?string $fieldTitle, DataObject $ownerRecord, bool &$includeInOwnTab): FormField
     {
         $includeInOwnTab = true;
+        $type = $fieldTitle ?? $ownerRecord->fieldLabel($relationName);
 
         // Term names are usually singular forms of the relation name
-        $termName = (new EnglishInflector())->singularize($fieldTitle ?? $relationName)[0];
+        $termName = (new EnglishInflector())->singularize($type)[0];
+        $terms = $this->getTermsForType($termName)->map();
+
+        if ($terms->count() === 0) {
+            return ReadonlyField::create($relationName, $type)
+                ->setDescription('No terms available for taxonomy type: ' . $termName)
+                ->performDisabledTransformation();
+        }
 
         return ListboxField::create(
             $relationName,
-            $fieldTitle,
-            $this->getTermsForType($termName) // @phpstan-ignore argument.type
+            $type,
+            $terms // @phpstan-ignore argument.type
         );
     }
 }
